@@ -1,34 +1,23 @@
 import random
 
-class Order:
-    def __init__(self, id, price, symbol, timestamp):
+
+class Transation:
+    # noinspection PyShadowingBuiltins
+    def __init__(self, price, buy: bool, timestamp, symbol: str, id: int):
         self.id = id
         self.price = price
         self.symbol = symbol
         self.timestamp = timestamp
+        self.buy = buy
 
 
-def random_order() -> Order:
-    return Order(random.randrange(100), random.randint(100, 150), 0, 0)
+def random_transation():
+    pass
 
 
 def main():
-    random_order()
-    pass
+    random_transation()
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-

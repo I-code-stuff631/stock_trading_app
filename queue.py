@@ -8,7 +8,7 @@ class _Node:
         self.prio = prio
 
     def __str__(self) -> str:
-        return f"({self.elem}, {self.prio})" + " -> " if self.next is not None else ""
+        return f"({self.elem}, {self.prio})" + (" -> " if self.next is not None else "")
 
 
 class PQueue:
@@ -44,6 +44,10 @@ class PQueue:
     def clear(self):
         self._head = None
 
+    def peek(self):
+        if self._head is not None:
+            return self._head.elem
+
     def __iter__(self):
         # noinspection PyShadowingBuiltins
         def generator():
@@ -56,7 +60,7 @@ class PQueue:
 
     # noinspection PyShadowingBuiltins
     def __str__(self) -> str:
-        fmted_nodes = ''
+        fmted_nodes = ""
         next = self._head
         while next is not None:
             fmted_nodes += str(next)
@@ -65,13 +69,13 @@ class PQueue:
 
 
 class Test(unittest.TestCase):
-    def check_exhaustion(self, queue: PQueue):  # Exhaustion
+    def check_empty(self, queue: PQueue):  # Exhaustion (check empty)
         self.assertTrue(queue.is_empty())
         self.assertEqual(queue.pop(), None)
 
     def test_basics(self):
         queue = PQueue()
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
         # Priorirty
         queue.push(6, 5)
@@ -94,7 +98,7 @@ class Test(unittest.TestCase):
         self.assertEqual(queue.pop(), 7)
         self.assertEqual(queue.pop(), 4)
         self.assertEqual(queue.pop(), 0)
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
         # Duplicates
         queue.push(3, 5)
@@ -109,7 +113,7 @@ class Test(unittest.TestCase):
         self.assertEqual(queue.pop(), 3)
         self.assertEqual(queue.pop(), 1)
         self.assertEqual(queue.pop(), 1)
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
         # FIFO
         queue.push(1, 10)
@@ -120,7 +124,7 @@ class Test(unittest.TestCase):
         self.assertEqual(queue.pop(), 2)
         self.assertEqual(queue.pop(), 3)
         self.assertEqual(queue.pop(), 4)
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
         # Clear
         queue.push(0, 0)
@@ -128,11 +132,11 @@ class Test(unittest.TestCase):
         queue.push(0, 2)
         queue.push(0, 3)
         queue.clear()
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
     def test_iter(self):
         queue = PQueue()
-        self.check_exhaustion(queue)
+        self.check_empty(queue)
 
         queue.push(6, 3)
         queue.push(10, 0)
@@ -157,9 +161,10 @@ class Test(unittest.TestCase):
         queue = PQueue()
         queue.push(2, 10)
         queue.push(2, 10)
+        queue.push(3, 10)  #
         queue.push(1, 1)
         queue.push(3, 5)
-        self.assertEqual("(2, 10) -> (2, 10) -> (3, 5) -> (1, 1)", str(queue))
+        self.assertEqual("(2, 10) -> (2, 10) -> (3, 10) -> (3, 5) -> (1, 1)", str(queue))
 
 
 if __name__ == '__main__':

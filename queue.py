@@ -69,13 +69,13 @@ class PQueue:
 
 
 class Test(unittest.TestCase):
-    def check_empty(self, queue: PQueue):  # Exhaustion (check empty)
+    def assert_empty(self, queue: PQueue):  # Exhaustion (check empty)
         self.assertTrue(queue.is_empty())
         self.assertEqual(None, queue.pop())
 
     def test_basics(self):
         queue = PQueue()
-        self.check_empty(queue)
+        self.assert_empty(queue)
 
         # Priorirty
         queue.push(6, 5)
@@ -98,7 +98,7 @@ class Test(unittest.TestCase):
         self.assertEqual(7, queue.pop())
         self.assertEqual(4, queue.pop())
         self.assertEqual(0, queue.pop())
-        self.check_empty(queue)
+        self.assert_empty(queue)
 
         # Duplicates
         queue.push(3, 5)
@@ -113,7 +113,7 @@ class Test(unittest.TestCase):
         self.assertEqual(3, queue.pop())
         self.assertEqual(1, queue.pop())
         self.assertEqual(1, queue.pop())
-        self.check_empty(queue)
+        self.assert_empty(queue)
 
         # FIFO
         queue.push(1, 10)
@@ -124,7 +124,7 @@ class Test(unittest.TestCase):
         self.assertEqual(2, queue.pop())
         self.assertEqual(3, queue.pop())
         self.assertEqual(4, queue.pop())
-        self.check_empty(queue)
+        self.assert_empty(queue)
 
         # Clear
         queue.push(0, 0)
@@ -132,11 +132,20 @@ class Test(unittest.TestCase):
         queue.push(0, 2)
         queue.push(0, 3)
         queue.clear()
-        self.check_empty(queue)
+        self.assert_empty(queue)
+
+        # Peek
+        self.assertEqual(None, queue.peek())
+        queue.push(0, 1)
+        self.assertEqual(0, queue.peek())
+        self.assertEqual(0, queue.peek())  # Was not removed
+
+        queue.clear()
+        self.assert_empty(queue)
 
     def test_iter(self):
         queue = PQueue()
-        self.check_empty(queue)
+        self.assert_empty(queue)
 
         queue.push(6, 3)
         queue.push(10, 0)

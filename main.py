@@ -40,11 +40,20 @@ def incoming():
 def main():
     buy = PQueue()
     sell = PQueue()
+    buy_length = 0
+    sell_length = 0
     for trans in incoming():
+
         if trans.is_buy:
+            buy_length += 1
             buy.push(trans, (trans.price, trans.timestamp))
+            if buy_length == 100:
+                buy.pop()
         else:
             sell.push(trans, (trans.price, trans.timestamp))
+            sell_length += 1
+            if sell_length == 100:
+                sell.pop()
 
 
 if __name__ == '__main__':

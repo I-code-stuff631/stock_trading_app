@@ -17,6 +17,7 @@ class PQueue:
         self._head: _Node | None = None  # Should only need a head
 
     def push(self, item, priority):  # enqueue(data, priority):
+        """Pushes an item onto the queue based on the priority"""
         new = _Node(item, priority)
         if self._head is None or self._head.prio < new.prio:  # The list is empty
             new.next = self._head
@@ -45,6 +46,7 @@ class PQueue:
         self._head = None
 
     def peek(self):
+        """Returns the next element to be popped without actually removing it from the list"""
         if self._head is not None:
             return self._head.elem
 

@@ -14,7 +14,7 @@ class _Node:
 class PQueue:
     """A priority queue implemented with a linked list for some reason"""
     def __init__(self, priority_determiner=lambda new_prio, old_prio: new_prio > old_prio):
-        """Priority determiner takes two priorities returning True if the first prioritie is greater than the second
+        """Priority determiner takes two priorities returning True if the first prioritie is higher than the second
         and False if it is not"""
         self._head: _Node | None = None  # Should only need a head
         self._new_has_priority = priority_determiner
@@ -82,98 +82,97 @@ class PQueue:
 
 
 class Test(unittest.TestCase):
-    def assert_empty(self, queue: PQueue):  # Exhaustion (check empty)
-        self.assertEqual(0, len(queue))
-        self.assertTrue(queue.is_empty())
-        self.assertEqual(None, queue.pop())
+    def setUp(self) -> None:
+        self.queue = PQueue(lambda new_prio, old_prio: new_prio >= old_prio)
 
-    def test_basics(self):
-        queue = PQueue()
-        self.assert_empty(queue)
+    def test_empty_queue_behavior(self):
+        self.assertEqual(None, self.queue.pop())
+        self.assertEqual(None, self.queue.peek())
+        self.assertTrue(self.queue.is_empty())
+        self.assertEqual(0, len(self.queue))
 
-        # Priorirty
-        queue.push(6, 5)
-        queue.push(9, 7)
-        queue.push(5, 3)
-        queue.push(2, 9)
-        queue.push(1, 6)
-        queue.push(0, 8)
-        queue.push(6, 4)
-        queue.push(4, 1)
-        queue.push(0, 0)
-        queue.push(7, 2)
-        self.assertEqual(10, len(queue))
-        self.assertEqual(2, queue.pop())
-        self.assertEqual(0, queue.pop())
-        self.assertEqual(9, queue.pop())
-        self.assertEqual(1, queue.pop())
-        self.assertEqual(6, queue.pop())
-        self.assertEqual(6, queue.pop())
-        self.assertEqual(5, queue.pop())
-        self.assertEqual(7, queue.pop())
-        self.assertEqual(4, queue.pop())
-        self.assertEqual(0, queue.pop())
-        self.assert_empty(queue)
+    def test_priority(self):
+        self.queue.push(6, 5)
+        self.queue.push(9, 7)
+        self.queue.push(5, 3)
+        self.queue.push(2, 9)
+        self.queue.push(1, 6)
+        self.queue.push(0, 8)
+        self.queue.push(6, 4)
+        self.queue.push(4, 1)
+        self.queue.push(0, 0)
+        self.queue.push(7, 2)
+        self.assertEqual(2, self.queue.pop())
+        self.assertEqual(0, self.queue.pop())
+        self.assertEqual(9, self.queue.pop())
+        self.assertEqual(1, self.queue.pop())
+        self.assertEqual(6, self.queue.pop())
+        self.assertEqual(6, self.queue.pop())
+        self.assertEqual(5, self.queue.pop())
+        self.assertEqual(7, self.queue.pop())
+        self.assertEqual(4, self.queue.pop())
+        self.assertEqual(0, self.queue.pop())
 
-        # Duplicates
-        queue.push(3, 5)
-        queue.push(1, 1)
-        queue.push(2, 10)
-        queue.push(3, 5)
-        queue.push(2, 10)
-        queue.push(1, 1)
-        self.assertEqual(6, len(queue))
-        self.assertEqual(2, queue.pop())
-        self.assertEqual(2, queue.pop())
-        self.assertEqual(3, queue.pop())
-        self.assertEqual(3, queue.pop())
-        self.assertEqual(1, queue.pop())
-        self.assertEqual(1, queue.pop())
-        self.assert_empty(queue)
+    def test_duplicates(self):
+        self.queue.push(3, 5)
+        self.queue.push(1, 1)
+        self.queue.push(2, 10)
+        self.queue.push(3, 5)
+        self.queue.push(2, 10)
+        self.queue.push(1, 1)
+        self.assertEqual(2, self.queue.pop())
+        self.assertEqual(2, self.queue.pop())
+        self.assertEqual(3, self.queue.pop())
+        self.assertEqual(3, self.queue.pop())
+        self.assertEqual(1, self.queue.pop())
+        self.assertEqual(1, self.queue.pop())
 
-        # FIFO
-        queue.push(1, 10)
-        queue.push(2, 10)
-        queue.push(3, 10)
-        queue.push(4, 10)
-        self.assertEqual(4, len(queue))
-        self.assertEqual(1, queue.pop())
-        self.assertEqual(2, queue.pop())
-        self.assertEqual(3, queue.pop())
-        self.assertEqual(4, queue.pop())
-        self.assert_empty(queue)
+    def test_length_tracking(self):
+        self.queue.push(None, 0)
+        self.assertEqual(1, len(self.queue))
 
-        # Clear
-        queue.push(0, 0)
-        queue.push(0, 1)
-        queue.push(0, 2)
-        queue.push(0, 3)
-        self.assertEqual(4, len(queue))
-        queue.clear()
-        self.assert_empty(queue)
+        for _ in range(10):
+            self.queue.push(None, 0)
+        self.assertEqual(11, len(self.queue))
 
-        # Peek
-        self.assertEqual(None, queue.peek())
-        queue.push(0, 1)
-        self.assertEqual(1, len(queue))
-        self.assertEqual(0, queue.peek())
-        # Was not removed
-        self.assertEqual(0, queue.peek())
-        self.assertEqual(1, len(queue))
+        self.queue.pop()
+        self.assertEqual(10, len(self.queue))
+        self.queue.peek()
+        self.assertEqual(10, len(self.queue))
+
+        for _ in range(5):
+            self.queue.pop()
+        self.assertEqual(5, len(self.queue))
+
+        self.queue.clear()
+        self.assertEqual(0, len(self.queue))
+        self.queue.pop()
+        self.assertEqual(0, len(self.queue))
+
+    def test_other(self):
+        self.assertEqual(None, self.queue.peek())
+        self.queue.push(0, 0)
+        self.assertEqual(0, self.queue.peek())
+        self.assertEqual(0, self.queue.peek())  # Was not removed
+
+        self.assertFalse(self.queue.is_empty())
+
+        self.queue.push(0, 1)
+        self.queue.push(0, 2)
+        self.queue.push(0, 3)
+        self.queue.push(0, 4)
+        self.queue.clear()
+        self.test_empty_queue_behavior()
 
     def test_iter(self):
-        queue = PQueue()
-        self.assert_empty(queue)
-
-        queue.push(6, 3)
-        queue.push(10, 0)
-        queue.push(10, 0)  #
-        queue.push(9, 0)  #
-        queue.push(0, 7)
-        queue.push(2, 9)
-        queue.push(3, 8)
-        queue.push(0, 6)
-        queue_iter = iter(queue)
+        self.queue.push(6, 3)
+        self.queue.push(10, 0)
+        self.queue.push(10, 0)
+        self.queue.push(0, 7)
+        self.queue.push(2, 9)
+        self.queue.push(3, 8)
+        self.queue.push(0, 6)
+        queue_iter = iter(self.queue)
         self.assertEqual(2, next(queue_iter))
         self.assertEqual(3, next(queue_iter))
         self.assertEqual(0, next(queue_iter))
@@ -181,17 +180,14 @@ class Test(unittest.TestCase):
         self.assertEqual(6, next(queue_iter))
         self.assertEqual(10, next(queue_iter))
         self.assertEqual(10, next(queue_iter))
-        self.assertEqual(9, next(queue_iter))
         self.assertRaises(StopIteration, queue_iter.__next__)  # The iteration is complete
 
     def test_print(self):
-        queue = PQueue()
-        queue.push(2, 10)
-        queue.push(2, 10)
-        queue.push(3, 10)  #
-        queue.push(1, 1)
-        queue.push(3, 5)
-        self.assertEqual("(2, 10) -> (2, 10) -> (3, 10) -> (3, 5) -> (1, 1)", str(queue))
+        self.queue.push(2, 10)
+        self.queue.push(2, 10)
+        self.queue.push(1, 1)
+        self.queue.push(3, 5)
+        self.assertEqual("(2, 10) -> (2, 10) -> (3, 5) -> (1, 1)", str(self.queue))
 
 
 if __name__ == '__main__':

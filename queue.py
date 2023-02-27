@@ -18,6 +18,7 @@ class PQueue:
         and False if it is not"""
         self._head: _Node | None = None  # Should only need a head
         self._new_has_priority = priority_determiner
+        self._length = 0
 
     def push(self, item, priority):  # enqueue(data, priority):
         """Pushes an item onto the queue based on the priority"""
@@ -25,6 +26,7 @@ class PQueue:
         if self._head is None or self._new_has_priority(new.prio, self._head.prio):  # The list is empty
             new.next = self._head
             self._head = new
+            self._length += 1
             return
         before: _Node = self._head  # The node before the new one
         while before.next is not None and not self._new_has_priority(new.prio, before.next.prio):
@@ -32,6 +34,7 @@ class PQueue:
         after: _Node | None = before.next  # The node after the new one
         before.next = new
         new.next = after
+        self._length += 1
 
     # noinspection PyShadowingBuiltins
     def pop(self):  # dequeue():
@@ -40,6 +43,7 @@ class PQueue:
             return None
         elem = self._head.elem
         self._head = self._head.next
+        self._length -= 1
         return elem
 
     def is_empty(self):
@@ -47,11 +51,15 @@ class PQueue:
 
     def clear(self):
         self._head = None
+        self._length = 0
 
     def peek(self):
         """Returns the next element to be popped without actually removing it from the list"""
         if self._head is not None:
             return self._head.elem
+
+    def __len__(self):
+        return self._length
 
     def __iter__(self):
         # noinspection PyShadowingBuiltins
@@ -75,6 +83,7 @@ class PQueue:
 
 class Test(unittest.TestCase):
     def assert_empty(self, queue: PQueue):  # Exhaustion (check empty)
+        self.assertEqual(0, len(queue))
         self.assertTrue(queue.is_empty())
         self.assertEqual(None, queue.pop())
 
@@ -93,6 +102,7 @@ class Test(unittest.TestCase):
         queue.push(4, 1)
         queue.push(0, 0)
         queue.push(7, 2)
+        self.assertEqual(10, len(queue))
         self.assertEqual(2, queue.pop())
         self.assertEqual(0, queue.pop())
         self.assertEqual(9, queue.pop())
@@ -112,6 +122,7 @@ class Test(unittest.TestCase):
         queue.push(3, 5)
         queue.push(2, 10)
         queue.push(1, 1)
+        self.assertEqual(6, len(queue))
         self.assertEqual(2, queue.pop())
         self.assertEqual(2, queue.pop())
         self.assertEqual(3, queue.pop())
@@ -125,6 +136,7 @@ class Test(unittest.TestCase):
         queue.push(2, 10)
         queue.push(3, 10)
         queue.push(4, 10)
+        self.assertEqual(4, len(queue))
         self.assertEqual(1, queue.pop())
         self.assertEqual(2, queue.pop())
         self.assertEqual(3, queue.pop())
@@ -136,17 +148,18 @@ class Test(unittest.TestCase):
         queue.push(0, 1)
         queue.push(0, 2)
         queue.push(0, 3)
+        self.assertEqual(4, len(queue))
         queue.clear()
         self.assert_empty(queue)
 
         # Peek
         self.assertEqual(None, queue.peek())
         queue.push(0, 1)
+        self.assertEqual(1, len(queue))
         self.assertEqual(0, queue.peek())
-        self.assertEqual(0, queue.peek())  # Was not removed
-
-        queue.clear()
-        self.assert_empty(queue)
+        # Was not removed
+        self.assertEqual(0, queue.peek())
+        self.assertEqual(1, len(queue))
 
     def test_iter(self):
         queue = PQueue()

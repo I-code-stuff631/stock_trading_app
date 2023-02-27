@@ -48,7 +48,7 @@ def main():
         return (new_price > old_price) or (new_price == old_price and new_timestamp < old_timestamp)
     sell = PQueue(sell_determ)
 
-    buy_length = 0
+    buy_length = 0  # You don't need these anymore because PQueue now tracks its length :)
     sell_length = 0
     for trans in incoming():
         if trans.is_buy:

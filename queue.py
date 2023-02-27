@@ -13,18 +13,21 @@ class _Node:
 
 class PQueue:
     """A priority queue implemented with a linked list for some reason"""
-    def __init__(self):
+    def __init__(self, priority_determiner=lambda new_prio, old_prio: new_prio > old_prio):
+        """Priority determiner takes two priorities returning True if the first prioritie is greater than the second
+        and False if it is not"""
         self._head: _Node | None = None  # Should only need a head
+        self._new_has_priority = priority_determiner
 
     def push(self, item, priority):  # enqueue(data, priority):
         """Pushes an item onto the queue based on the priority"""
         new = _Node(item, priority)
-        if self._head is None or self._head.prio < new.prio:  # The list is empty
+        if self._head is None or self._new_has_priority(new.prio, self._head.prio):  # The list is empty
             new.next = self._head
             self._head = new
             return
         before: _Node = self._head  # The node before the new one
-        while before.next is not None and before.next.prio >= new.prio:  # Equal as well to satisfy FIFO better
+        while before.next is not None and not self._new_has_priority(new.prio, before.next.prio):
             before = before.next
         after: _Node | None = before.next  # The node after the new one
         before.next = new

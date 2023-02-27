@@ -38,12 +38,19 @@ def incoming():
 
 
 def main():
-    buy = PQueue()
-    sell = PQueue()
+    def buy_determ(new_prio, old_prio):
+        (new_price, new_timestamp), (old_price, old_timestamp) = new_prio, old_prio
+        return (new_price < old_price) or (new_price == old_price and new_timestamp < old_timestamp)
+    buy = PQueue(buy_determ)
+
+    def sell_determ(new_prio, old_prio):
+        (new_price, new_timestamp), (old_price, old_timestamp) = new_prio, old_prio
+        return (new_price > old_price) or (new_price == old_price and new_timestamp < old_timestamp)
+    sell = PQueue(sell_determ)
+
     buy_length = 0
     sell_length = 0
     for trans in incoming():
-
         if trans.is_buy:
             buy_length += 1
             buy.push(trans, (trans.price, trans.timestamp))

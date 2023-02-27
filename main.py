@@ -2,6 +2,7 @@ import random
 from typing import Final
 import time
 from enum import Enum, auto
+from queue import PQueue
 
 
 class Symbol(Enum):
@@ -17,7 +18,7 @@ class Transaction:
 
     # noinspection PyShadowingBuiltins
     def __init__(self, buy: bool, symbol: Symbol, price, timestamp, id: int):
-        self.buy: Final = buy
+        self.is_buy: Final = buy
         self.symbol: Final = symbol
         self.price: Final = price
         self.timestamp: Final = timestamp
@@ -37,8 +38,13 @@ def incoming():
 
 
 def main():
-    for transaction in incoming():
-        pass
+    buy = PQueue()
+    sell = PQueue()
+    for trans in incoming():
+        if trans.is_buy:
+            buy.push(trans, (trans.price, trans.timestamp))
+        else:
+            sell.push(trans, (trans.price, trans.timestamp))
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ from typing import Final
 import time
 from enum import Enum, auto
 from queue import PQueue
-
+run_time = time.time()
 
 class Symbol(Enum):
     AAPL = auto()

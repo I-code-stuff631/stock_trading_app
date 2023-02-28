@@ -3,7 +3,9 @@ from typing import Final
 import time
 from enum import Enum, auto
 from queue import PQueue
-run_time = time.time()
+
+start_run = time.time()
+
 
 class Symbol(Enum):
     AAPL = auto()
@@ -46,19 +48,25 @@ def main():
         lambda new, old:
         (new['price'] > old['price']) or (new['price'] == old['price'] and new['timestamp'] < old['timestamp'])
     )
-    buy_length = 0  # You don't need these anymore because PQueue now tracks its length :)
-    sell_length = 0
+
+    n = 5
+
     for trans in incoming():
         if trans.is_buy:
-            buy_length += 1
             buy.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
-            if buy_length == 100:
-                buy.pop()
         else:
             sell.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
-            sell_length += 1
-            if sell_length == 100:
-                sell.pop()
+
+        end_run = time.time()
+        time_final = end_run - start_run
+        if time_final >= n:
+            n += 5
+            length_buy = len(buy) // 2
+            length_sell = len(buy) // 2
+            length_min = min(length_sell, length_buy)
+
+            for i in range(length_min):
+                print(sell.pop(), buy.pop())
 
 
 if __name__ == '__main__':

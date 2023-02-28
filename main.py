@@ -50,7 +50,6 @@ def main():
     )
 
     n = 5
-
     for trans in incoming():
         if trans.is_buy:
             buy.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
@@ -61,10 +60,7 @@ def main():
         time_final = end_run - start_run
         if time_final >= n:
             n += 5
-            length_buy = len(buy) // 2
-            length_sell = len(buy) // 2
-            length_min = min(length_sell, length_buy)
-
+            length_min = min(len(buy) // 2, len(sell) // 2)
             for i in range(length_min):
                 print(sell.pop(), buy.pop())
 

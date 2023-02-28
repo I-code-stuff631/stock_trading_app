@@ -38,26 +38,24 @@ def incoming():
 
 
 def main():
-    def buy_determ(new_prio, old_prio):
-        (new_price, new_timestamp), (old_price, old_timestamp) = new_prio, old_prio
-        return (new_price < old_price) or (new_price == old_price and new_timestamp < old_timestamp)
-    buy = PQueue(buy_determ)
-
-    def sell_determ(new_prio, old_prio):
-        (new_price, new_timestamp), (old_price, old_timestamp) = new_prio, old_prio
-        return (new_price > old_price) or (new_price == old_price and new_timestamp < old_timestamp)
-    sell = PQueue(sell_determ)
-
+    buy = PQueue(
+        lambda new, old:
+        (new['price'] < old['price']) or (new['price'] == old['price'] and new['timestamp'] < old['timestamp'])
+    )
+    sell = PQueue(
+        lambda new, old:
+        (new['price'] > old['price']) or (new['price'] == old['price'] and new['timestamp'] < old['timestamp'])
+    )
     buy_length = 0  # You don't need these anymore because PQueue now tracks its length :)
     sell_length = 0
     for trans in incoming():
         if trans.is_buy:
             buy_length += 1
-            buy.push(trans, (trans.price, trans.timestamp))
+            buy.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
             if buy_length == 100:
                 buy.pop()
         else:
-            sell.push(trans, (trans.price, trans.timestamp))
+            sell.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
             sell_length += 1
             if sell_length == 100:
                 sell.pop()

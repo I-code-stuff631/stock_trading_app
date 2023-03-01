@@ -4,8 +4,6 @@ import time
 from enum import Enum, auto
 from queue import PQueue
 
-start_run = time.time()
-
 
 class Symbol(Enum):
     AAPL = auto()
@@ -42,24 +40,22 @@ def incoming():
 def main():
     buy = PQueue(
         lambda new, old:
-        (new['price'] < old['price']) or (new['price'] == old['price'] and new['timestamp'] < old['timestamp'])
+        (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
     sell = PQueue(
         lambda new, old:
-        (new['price'] > old['price']) or (new['price'] == old['price'] and new['timestamp'] < old['timestamp'])
+        (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
 
-    n = 5
+    start_time: float = time.time()
     for trans in incoming():
         if trans.is_buy:
-            buy.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
+            buy.push(trans, {"price": trans.price, "timestamp": trans.timestamp})
         else:
-            sell.push(trans, {'price': trans.price, 'timestamp': trans.timestamp})
+            sell.push(trans, {"price": trans.price, "timestamp": trans.timestamp})
 
-        end_run = time.time()
-        time_final = end_run - start_run
-        if time_final >= n:
-            n += 5
+        if (time.time() - start_time) >= 5:
+            start_time = time.time()
             length_min = min(len(buy) // 2, len(sell) // 2)
             for i in range(length_min):
                 print(sell.pop(), buy.pop())

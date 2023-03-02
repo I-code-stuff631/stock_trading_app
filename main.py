@@ -31,7 +31,7 @@ def incoming():
         yield Transaction(
             random.randint(0, 1) == 1,
             random.choice(list(Symbol)),
-            random.uniform(5, 100),
+            random.normalvariate(50, 1),
             time.time() + random.uniform(-5, 5),
             random.randrange(two_power_128),
         )
@@ -58,7 +58,19 @@ def main():
             start_time = time.time()
             length_min = min(len(buy) // 2, len(sell) // 2)
             for i in range(length_min):
-                print(sell.pop(), buy.pop())
+                sell_item: Transaction = sell.pop()
+                buy_item: Transaction = buy.pop()
+                fmt_str = "{buy_or_sell} {symbol} for {price}$"
+                print(fmt_str.format(
+                    buy_or_sell="buy" if buy_item.is_buy else "sell",
+                    symbol=buy_item.symbol,
+                    price=round(buy_item.price, ndigits=2)
+                ), end=" and ")
+                print(fmt_str.format(
+                    buy_or_sell="buy" if sell_item.is_buy else "sell",
+                    symbol=sell_item.symbol,
+                    price=round(sell_item.price, ndigits=2)
+                ))
 
 
 if __name__ == '__main__':

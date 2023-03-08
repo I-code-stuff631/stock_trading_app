@@ -3,7 +3,6 @@ from typing import Final
 import time
 from enum import Enum, auto
 from queue import PQueue
-import collections
 
 
 class Symbol(Enum):
@@ -16,7 +15,6 @@ class Symbol(Enum):
 
 
 class Transaction:
-
     # noinspection PyShadowingBuiltins
     def __init__(self, buy: bool, symbol: Symbol, price, timestamp, id: int):
         self.is_buy: Final = buy
@@ -35,15 +33,13 @@ def incoming():
         yield Transaction(
             random.randint(0, 1) == 1,
             random.choice(list(Symbol)),
-            random.normalvariate(50, 5),
+            random.normalvariate(50, 10),
             time.time() + random.uniform(-5, 5),
             random.randrange(two_power_128),
         )
 
 
 def main():
-    global sell_list, buy_list
-
     sell = PQueue(
         lambda new, old:
         (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
@@ -64,56 +60,46 @@ def main():
             start_time = time.time()
             length_min = min(len(buy) // 2, len(sell) // 2)
 
-            sell_list = list()
-            buy_list = list()
-
+            sell_list: list[Transaction] = []
+            buy_list: list[Transaction] = []
             for _ in range(length_min):
-                sell_item: Transaction = sell.pop()
-                buy_item: Transaction = buy.pop()
+                sell_list.append(sell.pop())
+                buy_list.append(buy.pop())
 
-                sell_list.append(sell_item)
-                buy_list.append(buy_item)
-
-            sell_index_a = 0
-            buy_index_a = 0
-
-            for _ in range(len(sell_list)):
-                if sell_list[sell_index_a].symbol == buy_list[buy_index_a].symbol:
-                    print("\n")
-                    print(sell_list[sell_index_a])
-                    print(buy_list[buy_index_a])
-
-                    sell_list.pop(sell_index_a)
-                    buy_list.pop(buy_index_a)
-                if buy_index_a < len(buy_list):
-                    buy_index_a += 1
-                if sell_index_a < len(sell_list) and buy_index_a == len(buy_list):
-                    sell_index_b = 0
-                    buy_index_b = 0
-                    for _ in range(len(sell_list)):
-                        if sell_list[sell_index_b].symbol == buy_list[buy_index_b].symbol:
-                            print("\n")
-                            print(sell_list[sell_index_b])
-                            print(buy_list[buy_index_b])
-                            sell_list.pop(sell_index_b)
-                            buy_list.pop(buy_index_b)
-                            sell_index_a = 0
-                            buy_index_a = 0
-                            sell_index_b = 0
-                            buy_index_b = 0
-                        if sell_index_b < len(sell_list):
-                            sell_index_b += 1
-                        elif buy_index_b < len(buy_list) and sell_index_b == len(sell_list):
-                            for i in sell_list:
-                                sell.push(i, {"price": i.price, "timestamp": i.timestamp})
-                            for i in buy_list:
-                                buy.push(i, {"price": i.price, "timestamp": i.timestamp})
-                                sell_list = list()
-                                buy_list = list()
-                                sell_index_a = 0
-                                buy_index_a = 0
-                                sell_index_b = 0
-                                buy_index_b = 0
+            while True:
+                restart = False
+                for buying_trans in buy_list:
+                    restart = False
+                    matched_sell_trans = None
+                    # Find matching
+                    for selling_trans in sell_list:
+                        if buying_trans.symbol == selling_trans.symbol:
+                            if matched_sell_trans is None:
+                                matched_sell_trans = selling_trans
+                            elif selling_trans.price < buying_trans.price:
+                                if buying_trans.price - matched_sell_trans.price > buying_trans.price - selling_trans.price:
+                                    matched_sell_trans = selling_trans
+                    # If there is a match
+                    if matched_sell_trans is not None:
+                        print(buying_trans)
+                        print(matched_sell_trans)
+                        print()
+                        buy_list.remove(buying_trans)
+                        sell_list.remove(matched_sell_trans)
+                        # Restart buy list for loop
+                        restart = True
+                        break
+                    else:  # No match
+                        buy.push(buying_trans, {"price": buying_trans.price, "timestamp": buying_trans.timestamp})
+                        buy_list.remove(buying_trans)
+                        # Restart for loop
+                        restart = True
+                        break
+                if not restart:
+                    assert len(buy_list) == 0
+                    for selling_trans in sell_list:  # Push all unmatched sells back on
+                        sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
+                    break
 
 
 if __name__ == '__main__':

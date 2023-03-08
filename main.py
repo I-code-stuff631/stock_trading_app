@@ -24,7 +24,11 @@ class Transaction:
         self.id: Final = id
 
     def __str__(self):
-        return ("buy" if self.is_buy else "sell") + ' ' + str(self.symbol) + " for " + str(round(self.price, ndigits=2))
+        return "{buy_or_sell} {symbol} for ${price}".format(
+            buy_or_sell="buy" if self.is_buy else "sell",
+            symbol=self.symbol,
+            price=round(self.price, ndigits=2),
+        )
 
 
 def incoming():
@@ -33,7 +37,7 @@ def incoming():
         yield Transaction(
             random.randint(0, 1) == 1,
             random.choice(list(Symbol)),
-            random.normalvariate(50, 10),
+            random.normalvariate(50, 5),
             time.time() + random.uniform(-5, 5),
             random.randrange(two_power_128),
         )
@@ -41,11 +45,11 @@ def incoming():
 
 def main():
     sell = PQueue(
-        lambda new, old:
+        lambda new, old:  # Lowest sells get priority
         (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
     buy = PQueue(
-        lambda new, old:
+        lambda new, old:  # Highest buys get priority
         (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
 
@@ -69,16 +73,16 @@ def main():
             while True:
                 restart = False
                 for buying_trans in buy_list:
-                    restart = False
                     matched_sell_trans = None
+
                     # Find matching
                     for selling_trans in sell_list:
-                        if buying_trans.symbol == selling_trans.symbol:
+                        if buying_trans.symbol == selling_trans.symbol and selling_trans.price <= buying_trans.price:
                             if matched_sell_trans is None:
                                 matched_sell_trans = selling_trans
-                            elif selling_trans.price < buying_trans.price:
-                                if buying_trans.price - matched_sell_trans.price > buying_trans.price - selling_trans.price:
-                                    matched_sell_trans = selling_trans
+                            elif abs(selling_trans.price - buying_trans.price) < abs(matched_sell_trans.price - buying_trans.price):
+                                matched_sell_trans = selling_trans
+
                     # If there is a match
                     if matched_sell_trans is not None:
                         print(buying_trans)
@@ -95,11 +99,12 @@ def main():
                         # Restart for loop
                         restart = True
                         break
-                if not restart:
-                    assert len(buy_list) == 0
-                    for selling_trans in sell_list:  # Push all unmatched sells back on
-                        sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
-                    break
+                if restart:
+                    continue
+                assert len(buy_list) == 0
+                for selling_trans in sell_list:  # Push all unmatched sells back on
+                    sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
+                break
 
 
 if __name__ == '__main__':

@@ -3,7 +3,9 @@ from typing import Final
 import time
 from enum import Enum, auto
 from queue import PQueue
-
+# from rust_queue import PriorityQueue as PQueue
+from rich.console import Console
+from rich.table import Table
 
 class Symbol(Enum):
     AAPL = auto()
@@ -85,9 +87,27 @@ def main():
 
                     # If there is a match
                     if matched_sell_trans is not None:
+                        # table = Table(title="Stock Trading App")
+                        #
+                        # table.add_column("ID", style="green", no_wrap=True)
+                        # table.add_column("Sell Orders", style="cyan")
+                        # table.add_column("Buy Orders", style="magenta")
+                        # table.add_column("Matched Status", justify="right", style="green")
+                        #
+                        # table.add_row("ARSA34", str(sell_list[1]), str(buy_list[1]))
+                        # table.add_row("KJDJ97", str(sell_list[2]), str(buy_list[2]))
+                        # table.add_row("JDFYB53", str(sell_list[3]), str(buy_list[3]))
+                        #
+                        # console = Console()
+                        # console.print(table)
+
                         print(buying_trans)
                         print(matched_sell_trans)
                         print()
+
+                        time.sleep(1)
+                        # console.clear()
+
                         buy_list.remove(buying_trans)
                         sell_list.remove(matched_sell_trans)
                         # Restart buy list for loop
@@ -105,6 +125,7 @@ def main():
                 for selling_trans in sell_list:  # Push all unmatched sells back on
                     sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
                 break
+
 
 
 if __name__ == '__main__':

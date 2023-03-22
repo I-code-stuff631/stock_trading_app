@@ -7,6 +7,7 @@ from queue import PQueue
 from rich.console import Console
 from rich.table import Table
 
+
 class Symbol(Enum):
     AAPL = auto()
     TSLA = auto()
@@ -68,6 +69,7 @@ def main():
 
             sell_list: list[Transaction] = []
             buy_list: list[Transaction] = []
+            vis_sell = []
             for _ in range(length_min):
                 sell_list.append(sell.pop())
                 buy_list.append(buy.pop())
@@ -80,33 +82,44 @@ def main():
                     # Find matching
                     for selling_trans in sell_list:
                         if buying_trans.symbol == selling_trans.symbol and selling_trans.price <= buying_trans.price:
+                            # for i in range(10):
+                            #     vis_sell = sell_list.pop(++0)
+
                             if matched_sell_trans is None:
                                 matched_sell_trans = selling_trans
-                            elif abs(selling_trans.price - buying_trans.price) < abs(matched_sell_trans.price - buying_trans.price):
+                            elif abs(selling_trans.price - buying_trans.price) < abs(
+                                    matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
 
                     # If there is a match
                     if matched_sell_trans is not None:
-                        # table = Table(title="Stock Trading App")
-                        #
-                        # table.add_column("ID", style="green", no_wrap=True)
-                        # table.add_column("Sell Orders", style="cyan")
-                        # table.add_column("Buy Orders", style="magenta")
-                        # table.add_column("Matched Status", justify="right", style="green")
-                        #
-                        # table.add_row("ARSA34", str(sell_list[1]), str(buy_list[1]))
-                        # table.add_row("KJDJ97", str(sell_list[2]), str(buy_list[2]))
-                        # table.add_row("JDFYB53", str(sell_list[3]), str(buy_list[3]))
-                        #
-                        # console = Console()
-                        # console.print(table)
+                        table = Table(title="Stock Trading App")
+                        table.add_column("ID", style="green", no_wrap=True)
+                        table.add_column("Sell Orders", style="cyan")
+                        table.add_column("ID", style="green", no_wrap=True)
+                        table.add_column("Buy Orders", style="magenta")
 
-                        print(buying_trans)
-                        print(matched_sell_trans)
-                        print()
+                        table.add_row(hex(selling_trans.id)[:4], str(selling_trans), hex(buying_trans.id)[:4],
+                                      str(buying_trans))
 
-                        time.sleep(1)
-                        # console.clear()
+                        matched_table = Table(title="Matched Stocks")
+                        matched_table.add_column("ID", style="green", no_wrap=True)
+                        matched_table.add_column("Sell Orders", style="cyan")
+                        matched_table.add_column("ID", style="green", no_wrap=True)
+                        matched_table.add_column("Buy Orders", style="magenta")
+
+                        matched_table.add_row(hex(matched_sell_trans.id)[:4], str(matched_sell_trans), hex(buying_trans.id)[:4], str(buying_trans))
+
+                        console = Console()
+                        console.print(table)
+                        console.print(matched_table)
+
+                        # print(buying_trans)
+                        # print(matched_sell_trans)
+                        # print()
+
+                        time.sleep(.5)
+                        console.clear()
 
                         buy_list.remove(buying_trans)
                         sell_list.remove(matched_sell_trans)
@@ -125,7 +138,6 @@ def main():
                 for selling_trans in sell_list:  # Push all unmatched sells back on
                     sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
                 break
-
 
 
 if __name__ == '__main__':

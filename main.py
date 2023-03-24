@@ -3,9 +3,9 @@ from typing import Final
 import time
 from enum import Enum, auto
 from queue import PQueue
-# from rust_queue import PriorityQueue as PQueue
 from rich.console import Console
 from rich.table import Table
+console = Console()
 
 
 class Symbol(Enum):
@@ -55,7 +55,7 @@ def main():
         lambda new, old:  # Highest buys get priority
         (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
-    vis_index = 0
+    matched: list = []  # vis_index = 0
     start_time: float = time.time()
     for trans in incoming():
         if trans.is_buy:
@@ -69,7 +69,6 @@ def main():
 
             sell_list: list[Transaction] = []
             buy_list: list[Transaction] = []
-            vis_matched = []
             for _ in range(length_min):
                 sell_list.append(sell.pop())
                 buy_list.append(buy.pop())
@@ -87,61 +86,27 @@ def main():
                             elif abs(selling_trans.price - buying_trans.price) < abs(
                                     matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
+
                     # If there is a match
-
                     if matched_sell_trans is not None:
-                        vis_matched.append(matched_sell_trans)
-
                         table = Table(title="Stock Trading App")
                         table.add_column("ID", style="green", no_wrap=True)
                         table.add_column("Sell Orders", style="cyan")
                         table.add_column("ID", style="green", no_wrap=True)
                         table.add_column("Buy Orders", style="magenta")
+                        id_len = 4
+                        table.add_row(hex(matched_sell_trans.id)[:id_len], str(matched_sell_trans), hex(buying_trans.id)[:id_len], str(buying_trans))
+                        console.print(table)
 
-                        table.add_row(hex(selling_trans.id)[:4], str(selling_trans), hex(buying_trans.id)[:4],
-                                      str(buying_trans))
-
+                        matched.append((buying_trans, matched_sell_trans))
                         matched_table = Table(title="Matched Stocks")
                         matched_table.add_column("ID", style="green", no_wrap=True)
                         matched_table.add_column("Sell Orders", style="cyan")
                         matched_table.add_column("ID", style="green", no_wrap=True)
                         matched_table.add_column("Buy Orders", style="magenta")
-
-                        # matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
-                        #                       hex(buying_trans.id)[:4], str(buying_trans))
-
-                        if len(vis_matched) >= vis_index:
-                            matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
-                                              hex(buying_trans.id)[:4], str(buying_trans))
-                            if len(vis_matched) >= 1:
-                                matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
-                                                      hex(buying_trans.id)[:4], str(buying_trans))
-                                if len(vis_matched) >= 2:
-                                    matched_table.add_row(hex(matched_sell_trans.id)[:4],
-                                                          str(vis_matched[vis_index + 1]),
-                                                          hex(buying_trans.id)[:4], str(buying_trans))
-                                    if len(vis_matched) >= 3:
-                                        matched_table.add_row(hex(matched_sell_trans.id)[:4],
-                                                              str(vis_matched[vis_index + 2]),
-                                                              hex(buying_trans.id)[:4], str(buying_trans))
-                                        if len(vis_matched) >= 4:
-                                            matched_table.add_row(hex(matched_sell_trans.id)[:4],
-                                                                  str(vis_matched[vis_index + 3]),
-                                                                  hex(buying_trans.id)[:4], str(buying_trans))
-
-
-                        # if vis_index >= 4:
-                        #     vis_index = 0
-
-
-
-                        console = Console()
-                        console.print(table)
+                        for buy_trans, sell_trans in matched:
+                            matched_table.add_row(hex(sell_trans.id)[:id_len], str(sell_trans), hex(buy_trans.id)[:id_len], str(buy_trans))
                         console.print(matched_table)
-
-                        # print(buying_trans)
-                        # print(matched_sell_trans)
-                        # print()
 
                         time.sleep(.5)
                         console.clear()

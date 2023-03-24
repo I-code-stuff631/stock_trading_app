@@ -55,7 +55,7 @@ def main():
         lambda new, old:  # Highest buys get priority
         (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
-
+    vis_index = 0
     start_time: float = time.time()
     for trans in incoming():
         if trans.is_buy:
@@ -69,7 +69,7 @@ def main():
 
             sell_list: list[Transaction] = []
             buy_list: list[Transaction] = []
-            vis_sell = []
+            vis_matched = []
             for _ in range(length_min):
                 sell_list.append(sell.pop())
                 buy_list.append(buy.pop())
@@ -82,17 +82,16 @@ def main():
                     # Find matching
                     for selling_trans in sell_list:
                         if buying_trans.symbol == selling_trans.symbol and selling_trans.price <= buying_trans.price:
-                            # for i in range(10):
-                            #     vis_sell = sell_list.pop(++0)
-
                             if matched_sell_trans is None:
                                 matched_sell_trans = selling_trans
                             elif abs(selling_trans.price - buying_trans.price) < abs(
                                     matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
-
                     # If there is a match
+
                     if matched_sell_trans is not None:
+                        vis_matched.append(matched_sell_trans)
+
                         table = Table(title="Stock Trading App")
                         table.add_column("ID", style="green", no_wrap=True)
                         table.add_column("Sell Orders", style="cyan")
@@ -108,7 +107,33 @@ def main():
                         matched_table.add_column("ID", style="green", no_wrap=True)
                         matched_table.add_column("Buy Orders", style="magenta")
 
-                        matched_table.add_row(hex(matched_sell_trans.id)[:4], str(matched_sell_trans), hex(buying_trans.id)[:4], str(buying_trans))
+                        # matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
+                        #                       hex(buying_trans.id)[:4], str(buying_trans))
+
+                        if len(vis_matched) >= vis_index:
+                            matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
+                                              hex(buying_trans.id)[:4], str(buying_trans))
+                            if len(vis_matched) >= 1:
+                                matched_table.add_row(hex(matched_sell_trans.id)[:4], str(vis_matched[vis_index]),
+                                                      hex(buying_trans.id)[:4], str(buying_trans))
+                                if len(vis_matched) >= 2:
+                                    matched_table.add_row(hex(matched_sell_trans.id)[:4],
+                                                          str(vis_matched[vis_index + 1]),
+                                                          hex(buying_trans.id)[:4], str(buying_trans))
+                                    if len(vis_matched) >= 3:
+                                        matched_table.add_row(hex(matched_sell_trans.id)[:4],
+                                                              str(vis_matched[vis_index + 2]),
+                                                              hex(buying_trans.id)[:4], str(buying_trans))
+                                        if len(vis_matched) >= 4:
+                                            matched_table.add_row(hex(matched_sell_trans.id)[:4],
+                                                                  str(vis_matched[vis_index + 3]),
+                                                                  hex(buying_trans.id)[:4], str(buying_trans))
+
+
+                        # if vis_index >= 4:
+                        #     vis_index = 0
+
+
 
                         console = Console()
                         console.print(table)

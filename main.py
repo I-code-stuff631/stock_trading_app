@@ -5,6 +5,7 @@ from enum import Enum, auto
 from queue import PQueue
 from rich.console import Console
 from rich.table import Table
+from rust_queue import DoublePriorityQueue
 console = Console()
 
 
@@ -47,87 +48,38 @@ def incoming():
 
 
 def main():
-    sell = PQueue(
-        lambda new, old:  # Lowest sells get priority
-        (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
-    )
-    buy = PQueue(
-        lambda new, old:  # Highest buys get priority
-        (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
-    )
-    matched: list = []  # vis_index = 0
+    sell = DoublePriorityQueue(lambda item: item.price)  # Key extractor - takes an item and prouduces a key for it
+    buy = DoublePriorityQueue(lambda item: item.price)
+
+    matched_table = Table(title="Matched Stocks")
+    # matched_table.add_column("ID", style="green", no_wrap=True)
+    matched_table.add_column("Sell Orders", style="cyan")
+    # matched_table.add_column("ID", style="green", no_wrap=True)
+    matched_table.add_column("Buy Orders", style="magenta")
+
+    matched_transactions: list[(Transaction, Transaction)] = []
     start_time: float = time.time()
     for trans in incoming():
         if trans.is_buy:
-            buy.push(trans, {"price": trans.price, "timestamp": trans.timestamp})
+            buy.push(trans)
         else:
-            sell.push(trans, {"price": trans.price, "timestamp": trans.timestamp})
+            sell.push(trans)
 
         if (time.time() - start_time) >= 5:
-            start_time = time.time()
-            length_min = min(len(buy) // 2, len(sell) // 2)
+            matched_buy_trans = []
+            for buy_trans in buy:
+                matched_sell: Transaction | None = sell.pop_closest_satisfying(  # This only works if the key is numeric
+                    buy_trans,  # << It might be better to make this a key instead of an item that the key is extracted from
+                    lambda item: item.price <= buy_trans.price and item.symbol == buy_trans.symbol
+                )
+                if matched_sell is not None:
+                    matched_buy_trans.append(buy_trans)
+                    matched_transactions.append((buy_trans, matched_sell))
 
-            sell_list: list[Transaction] = []
-            buy_list: list[Transaction] = []
-            for _ in range(length_min):
-                sell_list.append(sell.pop())
-                buy_list.append(buy.pop())
-
-            while True:
-                restart = False
-                for buying_trans in buy_list:
-                    matched_sell_trans = None
-
-                    # Find matching
-                    for selling_trans in sell_list:
-                        if buying_trans.symbol == selling_trans.symbol and selling_trans.price <= buying_trans.price:
-                            if matched_sell_trans is None:
-                                matched_sell_trans = selling_trans
-                            elif abs(selling_trans.price - buying_trans.price) < abs(
-                                    matched_sell_trans.price - buying_trans.price):
-                                matched_sell_trans = selling_trans
-
-                    # If there is a match
-                    if matched_sell_trans is not None:
-                        table = Table(title="Stock Trading App")
-                        table.add_column("ID", style="green", no_wrap=True)
-                        table.add_column("Sell Orders", style="cyan")
-                        table.add_column("ID", style="green", no_wrap=True)
-                        table.add_column("Buy Orders", style="magenta")
-                        id_len = 4
-                        table.add_row(hex(matched_sell_trans.id)[:id_len], str(matched_sell_trans), hex(buying_trans.id)[:id_len], str(buying_trans))
-                        console.print(table)
-
-                        matched.append((buying_trans, matched_sell_trans))
-                        matched_table = Table(title="Matched Stocks")
-                        matched_table.add_column("ID", style="green", no_wrap=True)
-                        matched_table.add_column("Sell Orders", style="cyan")
-                        matched_table.add_column("ID", style="green", no_wrap=True)
-                        matched_table.add_column("Buy Orders", style="magenta")
-                        for buy_trans, sell_trans in matched:
-                            matched_table.add_row(hex(sell_trans.id)[:id_len], str(sell_trans), hex(buy_trans.id)[:id_len], str(buy_trans))
-                        console.print(matched_table)
-
-                        time.sleep(.5)
-                        console.clear()
-
-                        buy_list.remove(buying_trans)
-                        sell_list.remove(matched_sell_trans)
-                        # Restart buy list for loop
-                        restart = True
-                        break
-                    else:  # No match
-                        buy.push(buying_trans, {"price": buying_trans.price, "timestamp": buying_trans.timestamp})
-                        buy_list.remove(buying_trans)
-                        # Restart for loop
-                        restart = True
-                        break
-                if restart:
-                    continue
-                assert len(buy_list) == 0
-                for selling_trans in sell_list:  # Push all unmatched sells back on
-                    sell.push(selling_trans, {"price": selling_trans.price, "timestamp": selling_trans.timestamp})
-                break
+            # Remove all buy transactions that now have a matching sell
+            for buy_trans in matched_buy_trans:
+                buy.remove(buy_trans)
+            matched_buy_trans.clear()
 
 
 if __name__ == '__main__':

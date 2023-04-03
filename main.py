@@ -5,6 +5,7 @@ from enum import Enum, auto
 from queue import PQueue
 from rich.console import Console
 from rich.table import Table
+from collections import deque
 console = Console()
 
 
@@ -55,7 +56,17 @@ def main():
         lambda new, old:  # Highest buys get priority
         (new["price"] > old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
     )
-    matched: list = []  # vis_index = 0
+
+    def new_matched_table():
+        table = Table(title="Matched Stocks")
+        table.add_column("ID", style="green", no_wrap=True)
+        table.add_column("Sell Orders", style="cyan")
+        table.add_column("ID", style="green", no_wrap=True)
+        table.add_column("Buy Orders", style="magenta")
+        return table
+
+    matched_table = new_matched_table()
+    matched_transactions: deque[(Transaction, Transaction)] = deque(maxlen=10)
     start_time: float = time.time()
     for trans in incoming():
         if trans.is_buy:
@@ -66,6 +77,11 @@ def main():
         if (time.time() - start_time) >= 5:
             start_time = time.time()
             length_min = min(len(buy) // 2, len(sell) // 2)
+
+            def sleep(secs: float):
+                nonlocal start_time
+                time.sleep(secs)
+                start_time += secs
 
             sell_list: list[Transaction] = []
             buy_list: list[Transaction] = []
@@ -78,8 +94,30 @@ def main():
                 for buying_trans in buy_list:
                     matched_sell_trans = None
 
+                    def new_app_table():
+                        table = Table(title="Stock Trading App")
+                        table.add_column("Finding match for", style="red", no_wrap=True)
+                        table.add_column("Current match", style="green", no_wrap=True)
+                        table.add_column("Looking at", style="blue", no_wrap=True)
+                        return table
+
+                    app_table = new_app_table()
+                    app_table.add_row(str(buying_trans), str(matched_sell_trans), str(None))
+
+                    def refresh_console():
+                        console.clear()
+                        console.print(app_table)
+                        console.print(matched_table)
+                    refresh_console()
+                    sleep(1)
+
                     # Find matching
                     for selling_trans in sell_list:
+                        app_table = new_app_table()
+                        app_table.add_row(str(buying_trans), str(matched_sell_trans), str(selling_trans))
+                        refresh_console()
+                        # sleep(.5)
+
                         if buying_trans.symbol == selling_trans.symbol and selling_trans.price <= buying_trans.price:
                             if matched_sell_trans is None:
                                 matched_sell_trans = selling_trans
@@ -87,32 +125,29 @@ def main():
                                     matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
 
+                    app_table = new_app_table()
+                    app_table.add_row(str(buying_trans), str(matched_sell_trans), str(None))
+                    refresh_console()
+                    sleep(1)
+
                     # If there is a match
                     if matched_sell_trans is not None:
-                        table = Table(title="Stock Trading App")
-                        table.add_column("ID", style="green", no_wrap=True)
-                        table.add_column("Sell Orders", style="cyan")
-                        table.add_column("ID", style="green", no_wrap=True)
-                        table.add_column("Buy Orders", style="magenta")
-                        id_len = 4
-                        table.add_row(hex(matched_sell_trans.id)[:id_len], str(matched_sell_trans), hex(buying_trans.id)[:id_len], str(buying_trans))
-                        console.print(table)
-
-                        matched.append((buying_trans, matched_sell_trans))
-                        matched_table = Table(title="Matched Stocks")
-                        matched_table.add_column("ID", style="green", no_wrap=True)
-                        matched_table.add_column("Sell Orders", style="cyan")
-                        matched_table.add_column("ID", style="green", no_wrap=True)
-                        matched_table.add_column("Buy Orders", style="magenta")
-                        for buy_trans, sell_trans in matched:
-                            matched_table.add_row(hex(sell_trans.id)[:id_len], str(sell_trans), hex(buy_trans.id)[:id_len], str(buy_trans))
-                        console.print(matched_table)
-
-                        time.sleep(.5)
-                        console.clear()
-
+                        matched_transactions.appendleft((buying_trans, matched_sell_trans))
                         buy_list.remove(buying_trans)
                         sell_list.remove(matched_sell_trans)
+
+                        matched_table = new_matched_table()
+                        id_len = 4
+                        for buy_trans, sell_trans in matched_transactions:
+                            matched_table.add_row(
+                                hex(sell_trans.id)[:id_len],
+                                str(sell_trans),
+                                hex(buy_trans.id)[:id_len],
+                                str(buy_trans),
+                            )
+                        refresh_console()
+                        sleep(5)
+
                         # Restart buy list for loop
                         restart = True
                         break

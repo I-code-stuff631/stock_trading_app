@@ -124,16 +124,14 @@ def main():
                                     matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
 
-                    app_table = Table(title="Stock Trading App")
-                    app_table.add_column("Match for", style="red", no_wrap=True)
-                    app_table.add_column("Final match", style="cyan", no_wrap=True)
-                    app_table.add_row(str(buying_trans), str(matched_sell_trans))
-                    if matched_sell_trans is not None:
+                    if matched_sell_trans is not None:  # There is a match
+                        app_table = Table(title="Stock Trading App")
+                        app_table.add_column("Found match for", style="red", no_wrap=True)
+                        app_table.add_column("Match", style="cyan", no_wrap=True)
+                        app_table.add_row(str(buying_trans), str(matched_sell_trans))
                         refresh_console()
                         sleep(1)
 
-                    # If there is a match
-                    if matched_sell_trans is not None:
                         matched_transactions.appendleft((buying_trans, matched_sell_trans))
                         buy_list.remove(buying_trans)
                         sell_list.remove(matched_sell_trans)

@@ -6,6 +6,7 @@ from queue import PQueue
 from rich.console import Console
 from rich.table import Table
 from collections import deque
+from datetime import datetime
 console = Console()
 
 
@@ -48,7 +49,8 @@ def incoming():
 
 
 def main():
-    with open('matchedhistory.txt', "w") as f:
+    dt = datetime.now()
+    with open(f'{dt.date()}_{f"{dt.hour}-{dt.minute}-{dt.second}.{dt.microsecond}"}.log', "w") as f:
         sell = PQueue(
             lambda new, old:  # Lowest sells get priority
             (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])

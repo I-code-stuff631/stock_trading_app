@@ -1,3 +1,4 @@
+*.log
 rust_python_queue/
 ignored
 

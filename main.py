@@ -50,7 +50,7 @@ def incoming():
 
 def main():
     dt = datetime.now()
-    with open(f'{dt.date()}_{f"{dt.hour}-{dt.minute}-{dt.second}.{dt.microsecond}"}.log', "w") as f:
+    with open(f"{dt.date()}_{dt.hour}-{dt.minute}-{dt.second}.{dt.microsecond}.log", "w") as f:
         sell = PQueue(
             lambda new, old:  # Lowest sells get priority
             (new["price"] < old["price"]) or (new["price"] == old["price"] and new["timestamp"] < old["timestamp"])
@@ -129,7 +129,7 @@ def main():
 
                         if matched_sell_trans is not None:  # There is a match
                             app_table = Table(title="Stock Trading App")
-                            app_table.add_column("Found match for", style="red", no_wrap=True)
+                            app_table.add_column("Found match for", style="magenta", no_wrap=True)
                             app_table.add_column("Match", style="cyan", no_wrap=True)
                             app_table.add_row(str(buying_trans), str(matched_sell_trans))
                             refresh_console()

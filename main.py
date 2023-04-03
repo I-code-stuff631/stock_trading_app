@@ -101,6 +101,7 @@ def main():
                         table.add_column("Looking at", style="blue", no_wrap=True)
                         return table
 
+                    # So app_table is always bound
                     app_table = new_app_table()
                     app_table.add_row(str(buying_trans), str(matched_sell_trans), str(None))
 
@@ -108,8 +109,6 @@ def main():
                         console.clear()
                         console.print(app_table)
                         console.print(matched_table)
-                    refresh_console()
-                    sleep(1)
 
                     # Find matching
                     for selling_trans in sell_list:
@@ -125,10 +124,13 @@ def main():
                                     matched_sell_trans.price - buying_trans.price):
                                 matched_sell_trans = selling_trans
 
-                    app_table = new_app_table()
-                    app_table.add_row(str(buying_trans), str(matched_sell_trans), str(None))
-                    refresh_console()
-                    sleep(1)
+                    app_table = Table(title="Stock Trading App")
+                    app_table.add_column("Match for", style="red", no_wrap=True)
+                    app_table.add_column("Final match", style="cyan", no_wrap=True)
+                    app_table.add_row(str(buying_trans), str(matched_sell_trans))
+                    if matched_sell_trans is not None:
+                        refresh_console()
+                        sleep(1)
 
                     # If there is a match
                     if matched_sell_trans is not None:

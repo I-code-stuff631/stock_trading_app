@@ -91,6 +91,8 @@ def main():
                 for _ in range(length_min):
                     sell_list.append(sell.pop())
                     buy_list.append(buy.pop())
+                f.write(f"Sell chunk length: {len(sell_list)}\n")
+                f.write(f"Buy chunk length: {len(buy_list)}\n")
 
                 while True:
                     restart = False
